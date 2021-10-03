@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Question extends StatelessWidget {
-  String questionTitleText;
+  final String questionText;
 
-  Question(this.questionTitleText);
+  Question(this.questionText);
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +11,7 @@ class Question extends StatelessWidget {
       width: double.infinity,
       margin: EdgeInsets.only(top: 10),
       child: Text(
-        questionTitleText,
+        questionText,
         style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
