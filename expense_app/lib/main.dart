@@ -1,10 +1,18 @@
+import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import './widgets/new_transaction.dart';
 import './widgets/transaction_list.dart';
 import './widgets/chart.dart';
 import './models/transaction.dart';
 
 void main() {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
   runApp(MyApp());
 }
 
@@ -45,9 +53,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Transaction> _userTransactions = [
-    // Transaction(1, 'Teddy', 12.99, DateTime.now()),
-    // Transaction(2, 'Keyboard', 59.99, DateTime.now()),
+    Transaction(1, 'Teddy', 12.99, DateTime.now()),
+    Transaction(2, 'Keyboard', 59.99, DateTime.now()),
   ];
+
+  bool _showChart = true;
 
   List<Transaction> get _recentTransactions {
     return _userTransactions.where((transaction) {
@@ -67,7 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _deleteTransaction(int id) {
     setState(() {
-      _userTransactions = _userTransactions.where((element) => element.id != id).toList();
+      _userTransactions =
+          _userTransactions.where((element) => element.id != id).toList();
     });
   }
 
@@ -86,31 +97,74 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Expense App',
-        ),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _startAddNewTransaction(context),
-          )
-        ],
+    final AppBar appBar = AppBar(
+      title: Text(
+        'Expense App',
       ),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => _startAddNewTransaction(context),
+        )
+      ],
+    );
+    final MediaQueryData mediaQuery = MediaQuery.of(context);
+    final double availableHeight = mediaQuery.size.height -
+        appBar.preferredSize.height -
+        mediaQuery.padding.top;
+    final bool isLandscapeMode =
+        mediaQuery.orientation == Orientation.landscape;
+
+    return Scaffold(
+      appBar: appBar,
       body: Column(
-        // mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Chart(_recentTransactions),
-          TransactionList(_userTransactions, _deleteTransaction),
+          if (isLandscapeMode)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Show Chart'),
+                Switch.adaptive(
+                  activeColor: Theme.of(context).accentColor,
+                  value: _showChart,
+                  onChanged: (bool value) {
+                    setState(() {
+                      _showChart = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          if (isLandscapeMode)
+            _showChart
+                ? Container(
+                    height: availableHeight * 0.6,
+                    child: Chart(_recentTransactions),
+                  )
+                : Container(
+                    height: availableHeight * 0.7,
+                    child:
+                        TransactionList(_userTransactions, _deleteTransaction),
+                  ),
+          if (!isLandscapeMode)
+            Container(
+              height: availableHeight * 0.3,
+              child: Chart(_recentTransactions),
+            ),
+          if (!isLandscapeMode)
+            Container(
+              height: availableHeight * 0.7,
+              child: TransactionList(_userTransactions, _deleteTransaction),
+            ),
         ],
       ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => _startAddNewTransaction(context),
-      ),
+      floatingActionButton: Platform.isIOS
+          ? Container()
+          : FloatingActionButton(
+              child: Icon(Icons.add),
+              onPressed: () => _startAddNewTransaction(context),
+            ),
     );
   }
 }
